@@ -13,3 +13,12 @@ ___
     * Step 2: Change the styles of the window.
 * Section II
     * ...
+
+---
+
+####References
+* http://effbot.org/tkinterbook/
+* https://www.python-course.eu/python_tkinter.php
+
+
+
