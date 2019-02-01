@@ -46,14 +46,15 @@ class Game(object):
       elif self.canvas.state == configs.STATES.game_over:
         self.canvas.state = configs.STATES.welcome
       self.canvas.refresh()
-    elif key_symbol == 'Up':
-      self.canvas.snakes[0].set_direction(configs.DIRECTIONS[0])
-    elif key_symbol == 'Down':
-      self.canvas.snakes[0].set_direction(configs.DIRECTIONS[1])
-    elif key_symbol == 'Left':
-      self.canvas.snakes[0].set_direction(configs.DIRECTIONS[2])
-    elif key_symbol == 'Right':
-      self.canvas.snakes[0].set_direction(configs.DIRECTIONS[3])
+    elif key_symbol in ('Up', 'Down', 'Left', 'Right'):
+      indices = {'Up': 0, 'Down': 1, 'Left': 2, 'Right': 3}
+      self.canvas.snakes[0].set_direction(
+        configs.DIRECTIONS[indices[key_symbol]])
+    elif key_symbol in ('a', 'w', 's', 'd'):
+      if len(self.canvas.snakes) < 2: return
+      indices = {'w': 0, 's': 1, 'a': 2, 'd': 3}
+      self.canvas.snakes[1].set_direction(
+        configs.DIRECTIONS[indices[key_symbol]])
     else:
       print('>> Unknown key `{}` pressed.'.format(key_symbol))
 

@@ -22,7 +22,7 @@ snake_num = 1
 init_snake_len = 3
 apple_color = 'IndianRed2'
 head_colors = ('light blue', 'plum1')
-body_color = 'lavender'
+body_colors = ('light cyan', 'thistle1')
 
 welcome_font = 'Times 40'
 welcome_color = 'dodger blue'

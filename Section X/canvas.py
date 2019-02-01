@@ -6,16 +6,13 @@ import configs
 
 class Canvas(tk.Canvas):
 
-  EATEN_APPLE = 'EATEN_APPLE'
-  GAME_OVER = 'GAME_OVER'
-  NOTHING = 'NOTHING'
-
   def __init__(self, master):
     # Call parent's constructor
     super().__init__(master)
 
     # Init state
     self.state = configs.STATES.welcome
+    self.game_over_text = None
 
     # Grid and objects
     self.grids = set()
@@ -61,25 +58,46 @@ class Canvas(tk.Canvas):
     else:
       assert self.state == configs.STATES.gaming
 
-      # Try to move snakes
+      # Predict next bodies
+      bodies = [s.get_next_body(self.apple) for s in self.snakes]
       apple_eaten = False
-      game_over = False
-      for snake in self.snakes:
-        # Analyze next move
-        result = self._analyze_next_move(snake)
-        if result != self.GAME_OVER:
-          snake.move(result == self.EATEN_APPLE)
+      dead_indices = []
+      for i, snake in enumerate(self.snakes):
+        assert isinstance(snake, Snake)
+        head = bodies[i][0]
+        # Test apple
+        apple_eaten = apple_eaten or head == self.apple
+        # Test gg
+        if not self._in_bound(head):
+          dead_indices.append(i)
+        # Test collision
+        for j, body in enumerate(bodies):
+          b = body[1:] if i == j else body
+          if head in b:
+            dead_indices.append(i)
+            break
+        # Move snake if necessary
+        if len(dead_indices) == 0:
+          snake.move(self.apple)
 
-        apple_eaten = apple_eaten or result == self.EATEN_APPLE
-        game_over = game_over or result == self.GAME_OVER
-
-      # Show game over if necessary
-      if game_over:
+      # Game over test
+      if len(dead_indices) > 0:
+        if configs.snake_num == 1:
+          self.game_over_text = 'Game Over'
+        elif configs.snake_num == 2:
+          if len(dead_indices) == 2:
+            self.game_over_text = 'Tie'
+          else:
+            self.game_over_text = 'Player {} won!'.format(
+              1 if dead_indices[0] == 1 else 2)
+        else: assert False
+        # Refresh
         self.state = configs.STATES.game_over
         self.refresh()
 
       # Refresh apple if necessary
       if apple_eaten: self._refresh_apple()
+
       # Draw current playground
       self._draw_objects()
       self.after(configs.time_interval, self.refresh)
@@ -92,7 +110,7 @@ class Canvas(tk.Canvas):
     self.delete(tk.ALL)
     self.create_text(
       int(self.width / 2), int(self.height / 2),
-      anchor=tk.CENTER, text='Game Over', fill=configs.gg_color,
+      anchor=tk.CENTER, text=self.game_over_text, fill=configs.gg_color,
       font=configs.gg_font)
 
   def show_welcome(self):
@@ -105,17 +123,6 @@ class Canvas(tk.Canvas):
   # endregion : Public Methods
 
   # region : Private Methods
-
-  def _analyze_next_move(self, snake):
-    assert isinstance(snake, Snake)
-    coord = snake.next_coord
-    # Test apple
-    if coord == self.apple:
-      return self.EATEN_APPLE
-    # Test GG
-    if not self._in_bound(coord) or coord in snake.body[:-1]:
-      return self.GAME_OVER
-    return self.NOTHING
 
   def _refresh_apple(self):
     grids = tuple(self.available_grids)
@@ -169,7 +176,7 @@ class Canvas(tk.Canvas):
       self._draw_rectangle(snake.body[0], configs.head_colors[i])
       # Draw body
       for coord in snake.body[1:]:
-        self._draw_rectangle(coord, configs.body_color)
+        self._draw_rectangle(coord, configs.body_colors[i])
 
   def _draw_objects(self):
     self.delete(tk.ALL)
